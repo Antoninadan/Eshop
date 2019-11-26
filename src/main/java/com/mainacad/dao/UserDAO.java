@@ -51,71 +51,89 @@ public class UserDAO {
         int result = 0;
 
         try (Connection connection = ConnectionToDB.getConnection();
-             PreparedStatement preparedStatement = connection.prepareStatement(sql);
-             Statement statement = connection.createStatement()) {
+             PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
             preparedStatement.setInt(1, id);
+            ResultSet resultSet = preparedStatement.executeQuery();
 
-            result = preparedStatement.executeUpdate();
-            if (result == 1) {
-                ResultSet resultSet = statement.executeQuery(sql);
-
-                if (resultSet.first() == true) {
-                    user.setId(resultSet.getInt("id"));
-                    user.setLogin(resultSet.getString("login"));
-                    user.setPassword(resultSet.getString("password"));
-                    user.setFirstName(resultSet.getString("first_name"));
-                    user.setLastName(resultSet.getString("last_name"));
-                    user.setEmail(resultSet.getString("email"));
-                    user.setPhone(resultSet.getString("phone"));
-                }
-                resultSet.close();
+            while (resultSet.next()) {
+                user.setId(resultSet.getInt("id"));
+                user.setLogin(resultSet.getString("login"));
+                user.setPassword(resultSet.getString("password"));
+                user.setFirstName(resultSet.getString("first_name"));
+                user.setLastName(resultSet.getString("last_name"));
+                user.setEmail(resultSet.getString("email"));
+                user.setPhone(resultSet.getString("phone"));
+                break;
             }
-
-            } catch(SQLException e){
-                e.printStackTrace();
-            }
-            return user;
+            resultSet.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
+        return user;
+    }
 
-        public static User getByLoginAndPassword (String login, String password){
-            String sql = "SELECT * FROM users WHERE login = ? AND password = ?";
-            return null;
-        }
+    public static User getByLoginAndPassword(String login, String password) {
+        String sql = "SELECT * FROM users WHERE login = ? AND password = ?";
+        User user = new User();
+        int result = 0;
 
-        public static User update (User user){
-            String sql = "UPDATE users SET "
-                    + "login = ?, "
-                    + "password = ?, "
-                    + "first_name = ?, "
-                    + "last_name = ?, "
-                    + "email = ?, "
-                    + "phone = ? "
-                    + "WHERE id = ?";
-            try (Connection connection = ConnectionToDB.getConnection();
-                 PreparedStatement preparedStatement =
-                         connection.prepareStatement(sql)) {
-                preparedStatement.setString(1, user.getLogin());
-                preparedStatement.setString(2, user.getPassword());
-                preparedStatement.setString(3, user.getFirstName());
-                preparedStatement.setString(4, user.getLastName());
-                preparedStatement.setString(5, user.getEmail());
-                preparedStatement.setString(6, user.getPhone());
-                preparedStatement.setInt(7, user.getId());
-                preparedStatement.executeUpdate();
-            } catch (SQLException e) {
-                e.printStackTrace();
+        try (Connection connection = ConnectionToDB.getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+            preparedStatement.setString(1, login);
+            preparedStatement.setString(2, password);
+            ResultSet resultSet = preparedStatement.executeQuery();
+
+            while (resultSet.next()) {
+                user.setId(resultSet.getInt("id"));
+                user.setLogin(resultSet.getString("login"));
+                user.setPassword(resultSet.getString("password"));
+                user.setFirstName(resultSet.getString("first_name"));
+                user.setLastName(resultSet.getString("last_name"));
+                user.setEmail(resultSet.getString("email"));
+                user.setPhone(resultSet.getString("phone"));
+                break;
             }
-            return user;
+            resultSet.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
+        return user;
+    }
 
-        public static void delete (Integer id){
-            String sql = "DELETE FROM users WHERE id = ?";
-            try (Connection connection = ConnectionToDB.getConnection();
-                 PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
-                preparedStatement.setInt(1, id);
-                preparedStatement.executeUpdate();
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
+    public static User update(User user) {
+        String sql = "UPDATE users SET "
+                + "login = ?, "
+                + "password = ?, "
+                + "first_name = ?, "
+                + "last_name = ?, "
+                + "email = ?, "
+                + "phone = ? "
+                + "WHERE id = ?";
+        try (Connection connection = ConnectionToDB.getConnection();
+             PreparedStatement preparedStatement =
+                     connection.prepareStatement(sql)) {
+            preparedStatement.setString(1, user.getLogin());
+            preparedStatement.setString(2, user.getPassword());
+            preparedStatement.setString(3, user.getFirstName());
+            preparedStatement.setString(4, user.getLastName());
+            preparedStatement.setString(5, user.getEmail());
+            preparedStatement.setString(6, user.getPhone());
+            preparedStatement.setInt(7, user.getId());
+            preparedStatement.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return user;
+    }
+
+    public static void delete(Integer id) {
+        String sql = "DELETE FROM users WHERE id = ?";
+        try (Connection connection = ConnectionToDB.getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+            preparedStatement.setInt(1, id);
+            preparedStatement.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
     }
+}

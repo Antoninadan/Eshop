@@ -59,4 +59,19 @@ class UserDAOTest {
         assertEquals("phone3", newUser.getPhone());
     }
 
+    @Test
+    void getByLoginAndPassword() {
+        User user = new User("login4", "password4", "firstname4",
+                "lastname4", "email4", "phone4");
+        UserDAO.save(user);
+        Integer id = user.getId();
+
+        User newUser = new User();
+        newUser = UserDAO.getByLoginAndPassword("login4", "password4");
+
+        assertEquals("firstname4", newUser.getFirstName());
+        assertEquals("lastname4", newUser.getLastName());
+        assertEquals("email4", newUser.getEmail());
+        assertEquals("phone4", newUser.getPhone());
+    }
 }
