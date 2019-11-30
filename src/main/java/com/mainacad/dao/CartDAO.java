@@ -1,5 +1,7 @@
 package com.mainacad.dao;
 
+import com.mainacad.model.Cart;
+import com.mainacad.model.Status;
 import com.mainacad.model.User;
 
 import java.sql.Connection;
@@ -9,33 +11,30 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class UserDAO {
+public class CartDAO {
 
-    public static User save(User user) {
-        String sql = "INSERT INTO users " +
-                "(login, password, first_name, last_name, email, phone) " +
-                "VALUES (?, ?, ?, ?, ?, ?)";
-        String sequenceSQL = "SELECT currval(pg_get_serial_sequence('users','id'))";
+    public static Cart save(Cart cart) {
+        String sql = "INSERT INTO carts " +
+                "(status, user_id, creation_time) " +
+                "VALUES (?, ?, ?)";
+        String sequenceSQL = "SELECT currval(pg_get_serial_sequence('carts','id'))";
 
         int result = 0;
-        try (Connection connection = ConnectionToDB.getConnection();
+        try ( Connection connection = ConnectionToDB.getConnection();
               PreparedStatement preparedStatement =
                       connection.prepareStatement(sql);
               PreparedStatement sequenceStatement =
                       connection.prepareStatement(sequenceSQL)) {
-            preparedStatement.setString(1, user.getLogin());
-            preparedStatement.setString(2, user.getPassword());
-            preparedStatement.setString(3, user.getFirstName());
-            preparedStatement.setString(4, user.getLastName());
-            preparedStatement.setString(5, user.getEmail());
-            preparedStatement.setString(6, user.getPhone());
+            preparedStatement.setInt(1, cart.getStatus().ordinal());
+            preparedStatement.setInt(2, cart.getUser().getId());
+            preparedStatement.setLong(3, cart.getCreationTime());
             result = preparedStatement.executeUpdate();
 
             if( result == 1 ) {
                 ResultSet resultSet = sequenceStatement.executeQuery();
                 while (resultSet.next()) {
                     Integer id = resultSet.getInt(1);
-                    user.setId(id);
+                    cart.setId(id);
                     break;
                 }
             }
@@ -45,37 +44,41 @@ public class UserDAO {
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        return user;
+        return cart;
     }
 
-    public static List<User> getAll() {
-        String sql = "SELECT * FROM users";
-        List<User> users = new ArrayList<>();
+    public static List<Cart> getAllByUserAndPeriod(User user, Long timeFrom, Long timeTo) {
+        String sql = "SELECT * FROM carts WHERE user_id=? AND creation_time=>? AND creation_time<=?";
+        List<Cart> carts = new ArrayList<>();
         try ( Connection connection = ConnectionToDB.getConnection();
               PreparedStatement preparedStatement =
                       connection.prepareStatement(sql);
-              ResultSet resultSet = preparedStatement.executeQuery();
         ) {
+
+            preparedStatement.setInt(1, user.getId());
+            preparedStatement.setLong(2, timeFrom);
+            preparedStatement.setLong(3, timeTo);
+            ResultSet resultSet = preparedStatement.executeQuery();
+
             while(resultSet.next()) {
-                User user = new User (
+                Cart cart = new Cart (
                         resultSet.getInt("id"),
-                        resultSet.getString("login"),
-                        resultSet.getString("password"),
-                        resultSet.getString("first_name"),
-                        resultSet.getString("last_name"),
-                        resultSet.getString("email"),
-                        resultSet.getString("phone")
+                        Status.values()[resultSet.getInt("status")],
+                        user,
+                        resultSet.getLong("creation_time")
                 );
-                users.add(user);
+                carts.add(cart);
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return users;
+        return carts;
     }
 
-    public static User getById(Integer id) {
-        String sql = "SELECT * FROM users WHERE id = ?";
+    public static Cart getById(Integer id) {
+        String sql = "SELECT *, c.id AS cartId FROM carts c " +
+                "JOIN users u ON u.id=c.user_id " +
+                "WHERE c.id = ?";
         try ( Connection connection = ConnectionToDB.getConnection();
               PreparedStatement preparedStatement =
                       connection.prepareStatement(sql)
@@ -83,8 +86,15 @@ public class UserDAO {
             preparedStatement.setInt(1, id);
             ResultSet resultSet = preparedStatement.executeQuery();
             while(resultSet.next()) {
+                Cart cart = new Cart (
+                        resultSet.getInt("cartId"),
+                        Status.values()[resultSet.getInt("status")],
+                        null,
+                        resultSet.getLong("creation_time")
+                );
+
                 User user = new User (
-                        resultSet.getInt("id"),
+                        resultSet.getInt("user_id"),
                         resultSet.getString("login"),
                         resultSet.getString("password"),
                         resultSet.getString("first_name"),
@@ -92,7 +102,9 @@ public class UserDAO {
                         resultSet.getString("email"),
                         resultSet.getString("phone")
                 );
-                return user;
+                cart.setUser(user);
+
+                return cart;
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -100,27 +112,22 @@ public class UserDAO {
         return null;
     }
 
-    public static User getByLoginAndPassword(String login, String password) {
-        String sql = "SELECT * FROM users WHERE login = ? AND password = ?";
+    public static Cart getByUserAndOpenStatus(User user) {
+        String sql = "SELECT * FROM carts WHERE user_id = ? AND status=0";
         try ( Connection connection = ConnectionToDB.getConnection();
               PreparedStatement preparedStatement =
                       connection.prepareStatement(sql)
         ) {
-            preparedStatement.setString(1, login);
-            preparedStatement.setString(2, password);
-
+            preparedStatement.setInt(1, user.getId());
             ResultSet resultSet = preparedStatement.executeQuery();
             while(resultSet.next()) {
-                User user = new User (
+                Cart cart = new Cart (
                         resultSet.getInt("id"),
-                        resultSet.getString("login"),
-                        resultSet.getString("password"),
-                        resultSet.getString("first_name"),
-                        resultSet.getString("last_name"),
-                        resultSet.getString("email"),
-                        resultSet.getString("phone")
+                        Status.values()[resultSet.getInt("status")],
+                        user,
+                        resultSet.getLong("creation_time")
                 );
-                return user;
+                return cart;
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -128,29 +135,20 @@ public class UserDAO {
         return null;
     }
 
-    public static User update(User user) {
-        String sql = "UPDATE users SET " +
-                "login = ?, " +
-                "password = ?, " +
-                "first_name = ?, " +
-                "last_name = ?, " +
-                "email = ?, " +
-                "phone = ? " +
+    public static Cart updateStatus(Cart cart, Status status) {
+        String sql = "UPDATE carts SET " +
+                "status=? "+
                 "WHERE id = ?";
         try ( Connection connection = ConnectionToDB.getConnection();
               PreparedStatement preparedStatement =
                       connection.prepareStatement(sql)) {
-            preparedStatement.setString(1, user.getLogin());
-            preparedStatement.setString(2, user.getPassword());
-            preparedStatement.setString(3, user.getFirstName());
-            preparedStatement.setString(4, user.getLastName());
-            preparedStatement.setString(5, user.getEmail());
-            preparedStatement.setString(6, user.getPhone());
-            preparedStatement.setInt(7, user.getId());
+
+            preparedStatement.setInt(1, status.ordinal());
+            preparedStatement.setInt(2, cart.getId());
 
             int result = preparedStatement.executeUpdate();
             if (result == 1) {
-                return user;
+                return cart;
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -159,7 +157,7 @@ public class UserDAO {
     }
 
     public static void delete(Integer id) {
-        String sql = "DELETE FROM users WHERE id = ?";
+        String sql = "DELETE FROM carts WHERE id = ?";
         try ( Connection connection = ConnectionToDB.getConnection();
               PreparedStatement preparedStatement =
                       connection.prepareStatement(sql)) {

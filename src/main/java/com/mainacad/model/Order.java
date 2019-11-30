@@ -11,13 +11,13 @@ import lombok.Setter;
 @AllArgsConstructor
 public class Order {
     private Integer id;
-    private Integer itemId;
-    private Integer cartId;
+    private Item item;
+    private Cart cart;
     private Integer amount;
 
-    public Order(Integer itemId, Integer cartId, Integer amount) {
-        this.itemId = itemId;
-        this.cartId = cartId;
+    public Order(Item item, Cart cart, Integer amount) {
+        this.item = item;
+        this.cart = cart;
         this.amount = amount;
     }
 }

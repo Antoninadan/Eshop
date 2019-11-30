@@ -1,77 +1,65 @@
 package com.mainacad.dao;
 
 import com.mainacad.model.User;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 class UserDAOTest {
 
+    private static List<User> users;
+
+    @BeforeAll
+    static void setPreConditions() {
+        users = new ArrayList<>();
+    }
+
     @Test
     void save() {
-        User user = new User("login", "password", "firstname",
-                "lastname", "email", "+4353456363464");
+        User user = new User("testLogin", "testPass", "testName", "testLastName", "testEmail", "123456789");
         UserDAO.save(user);
+        users.add(user);
         assertNotNull(user.getId());
     }
 
     @Test
     void update() {
-        User user = new User("login1", "password1", "firstname1",
-                "lastname1", "email1", "phone1");
-        UserDAO.save(user);
+        User user = new User("testLogin", "testPass", "testName", "testLastName", "testEmail", "123456789");
+        User savedUser = UserDAO.save(user);
+        users.add(savedUser);
+        assertNotNull(savedUser);
+        assertNotNull(savedUser.getId());
+        assertEquals("testPass", savedUser.getPassword());
 
-        user.setLogin("login_update");
-        user.setPassword("password_update");
-        user.setFirstName("firstname_update");
-        user.setLastName("lastname_update");
-        user.setEmail("email_update");
-        user.setPhone("phone_update");
+        user.setPassword("newPass");
 
-        UserDAO.update(user);
+        User updatedUser = UserDAO.update(user);
+        assertNotNull(updatedUser);
+        assertEquals("newPass", updatedUser.getPassword());
     }
 
     @Test
-    void delete() {
-        User user = new User("login2", "password2", "firstname2",
-                "lastname2", "email2", "phone2");
+    void getAndDelete() {
+        User user = new User("testLogin", "testPass", "testName", "testLastName", "testEmail", "123456789");
         UserDAO.save(user);
-        Integer id = user.getId();
-        UserDAO.delete(id);
+
+        assertNotNull(user.getId());
+
+        User targetUser = UserDAO.getById(user.getId());
+        assertNotNull(targetUser);
+        UserDAO.delete(targetUser.getId());
+        targetUser = UserDAO.getById(user.getId());
+        assertNull(targetUser);
     }
 
-    @Test
-    void getById() {
-        User user = new User("login3", "password3", "firstname3",
-                "lastname3", "email3", "phone3");
-        UserDAO.save(user);
-        Integer id = user.getId();
 
-        User newUser = new User();
-        newUser = UserDAO.getById(id);
-
-        assertEquals(id, newUser.getId());
-        assertEquals("login3", newUser.getLogin());
-        assertEquals("password3", newUser.getPassword());
-        assertEquals("firstname3", newUser.getFirstName());
-        assertEquals("lastname3", newUser.getLastName());
-        assertEquals("email3", newUser.getEmail());
-        assertEquals("phone3", newUser.getPhone());
-    }
-
-    @Test
-    void getByLoginAndPassword() {
-        User user = new User("login4", "password4", "firstname4",
-                "lastname4", "email4", "phone4");
-        UserDAO.save(user);
-        Integer id = user.getId();
-
-        User newUser = new User();
-        newUser = UserDAO.getByLoginAndPassword("login4", "password4");
-
-        assertEquals("firstname4", newUser.getFirstName());
-        assertEquals("lastname4", newUser.getLastName());
-        assertEquals("email4", newUser.getEmail());
-        assertEquals("phone4", newUser.getPhone());
+    @AfterAll
+    static void deleteTestData() {
+        users.forEach(it -> UserDAO.delete(it.getId()));
     }
 }
