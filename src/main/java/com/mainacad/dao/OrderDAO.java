@@ -46,28 +46,29 @@ public class OrderDAO {
     }
 
     public static List<Order> getAllByCart(Cart cart) {
-        String sql = "SELECT * FROM orders WHERE cart_id=?";
+        String sql = "SELECT *, o.id as order_id FROM orders o JOIN items i ON i.id=o.item_id " +
+                "WHERE o.cart_id=?";
         List<Order> orders = new ArrayList<>();
         try ( Connection connection = ConnectionToDB.getConnection();
               PreparedStatement preparedStatement =
                       connection.prepareStatement(sql);
         ) {
-
             preparedStatement.setInt(1, cart.getId());
             ResultSet resultSet = preparedStatement.executeQuery();
 
             while(resultSet.next()) {
                 Order order = new Order (
-                        resultSet.getInt("id"),
+                        resultSet.getInt("order_id"),
                         null,
                         cart,
-                        resultSet.getInt("amount")
-                );
-
-                //TODO refactor it - make one query instead two
-                Item item = ItemDAO.getById(resultSet.getInt("item_id"));
+                        resultSet.getInt("amount"));
+                Item item = new Item(
+                        resultSet.getInt("item_id"),
+                        resultSet.getString("name"),
+                        resultSet.getString("code"),
+                        resultSet.getInt("price"),
+                        resultSet.getInt("availability"));
                 order.setItem(item);
-
                 orders.add(order);
             }
         } catch (Exception e) {
@@ -77,7 +78,11 @@ public class OrderDAO {
     }
 
     public static Order getById(Integer id) {
-        String sql = "SELECT * FROM orders WHERE id = ?";
+        String sql = "SELECT * FROM orders o " +
+                "JOIN items i ON i.id=o.item_id " +
+                "JOIN carts c ON c.id=o.cart_id " +
+                "JOIN users u ON u.id=c.user_id " +
+                "WHERE o.id = ?";
         try ( Connection connection = ConnectionToDB.getConnection();
               PreparedStatement preparedStatement =
                       connection.prepareStatement(sql)
@@ -91,13 +96,29 @@ public class OrderDAO {
                         null,
                         resultSet.getInt("amount")
                 );
-
-                //TODO refactor it - make one query instead two
-                Item item = ItemDAO.getById(resultSet.getInt("item_id"));
-                Cart cart = CartDAO.getById(resultSet.getInt("cart_id"));
+                Item item = new Item(
+                        resultSet.getInt("item_id"),
+                        resultSet.getString("name"),
+                        resultSet.getString("code"),
+                        resultSet.getInt("price"),
+                        resultSet.getInt("availability"));
+                Cart cart = new Cart(
+                        resultSet.getInt("cart_id"),
+                        Status.values()[resultSet.getInt("status")],
+                        null,
+                        resultSet.getLong("creation_time"));
+                User user = new User (
+                        resultSet.getInt("user_id"),
+                        resultSet.getString("login"),
+                        resultSet.getString("password"),
+                        resultSet.getString("first_name"),
+                        resultSet.getString("last_name"),
+                        resultSet.getString("email"),
+                        resultSet.getString("phone")
+                );
+                cart.setUser(user);
                 order.setItem(item);
                 order.setCart(cart);
-
                 return order;
             }
         } catch (Exception e) {
@@ -117,5 +138,4 @@ public class OrderDAO {
             e.printStackTrace();
         }
     }
-
 }

@@ -48,20 +48,19 @@ public class CartDAO {
     }
 
     public static List<Cart> getAllByUserAndPeriod(User user, Long timeFrom, Long timeTo) {
-        String sql = "SELECT * FROM carts WHERE user_id=? AND creation_time=>? AND creation_time<=?";
+        String sql = "SELECT * FROM carts WHERE user_id=? AND creation_time >= ? AND creation_time <=?";
         List<Cart> carts = new ArrayList<>();
         try ( Connection connection = ConnectionToDB.getConnection();
               PreparedStatement preparedStatement =
                       connection.prepareStatement(sql);
         ) {
-
             preparedStatement.setInt(1, user.getId());
             preparedStatement.setLong(2, timeFrom);
             preparedStatement.setLong(3, timeTo);
-            ResultSet resultSet = preparedStatement.executeQuery();
 
+            ResultSet resultSet = preparedStatement.executeQuery();
             while(resultSet.next()) {
-                Cart cart = new Cart (
+                Cart cart = new Cart(
                         resultSet.getInt("id"),
                         Status.values()[resultSet.getInt("status")],
                         user,
@@ -92,7 +91,6 @@ public class CartDAO {
                         null,
                         resultSet.getLong("creation_time")
                 );
-
                 User user = new User (
                         resultSet.getInt("user_id"),
                         resultSet.getString("login"),
@@ -103,7 +101,6 @@ public class CartDAO {
                         resultSet.getString("phone")
                 );
                 cart.setUser(user);
-
                 return cart;
             }
         } catch (Exception e) {
@@ -141,8 +138,8 @@ public class CartDAO {
                 "WHERE id = ?";
         try ( Connection connection = ConnectionToDB.getConnection();
               PreparedStatement preparedStatement =
-                      connection.prepareStatement(sql)) {
-
+                      connection.prepareStatement(sql)
+        ) {
             preparedStatement.setInt(1, status.ordinal());
             preparedStatement.setInt(2, cart.getId());
 
@@ -160,7 +157,8 @@ public class CartDAO {
         String sql = "DELETE FROM carts WHERE id = ?";
         try ( Connection connection = ConnectionToDB.getConnection();
               PreparedStatement preparedStatement =
-                      connection.prepareStatement(sql)) {
+                      connection.prepareStatement(sql)
+        ) {
             preparedStatement.setInt(1, id);
             preparedStatement.executeUpdate();
         } catch (SQLException e) {

@@ -19,6 +19,11 @@ class UserDAOTest {
         users = new ArrayList<>();
     }
 
+    @AfterAll
+    static void deleteTestData() {
+        users.forEach(it -> UserDAO.delete(it.getId()));
+    }
+
     @Test
     void save() {
         User user = new User("testLogin", "testPass", "testName", "testLastName", "testEmail", "123456789");
@@ -57,9 +62,41 @@ class UserDAOTest {
         assertNull(targetUser);
     }
 
+    @Test
+    void getAll() {
+        User user1 = new User("testLogin22", "testPass", "testName", "testLastName", "testEmail", "123456789");
+        User user2 = new User("testLogin23", "testPass", "testName", "testLastName", "testEmail", "123456789");
+        UserDAO.save(user1);
+        UserDAO.save(user2);
+        users.add(user1);
+        users.add(user2);
+        assertNotNull(user1.getId());
+        assertNotNull(user2.getId());
 
-    @AfterAll
-    static void deleteTestData() {
-        users.forEach(it -> UserDAO.delete(it.getId()));
+        List<User> targetUsers = UserDAO.getAll();
+        assertTrue(targetUsers.size() >= 2);
+
+        int count = 0;
+        for (User each:targetUsers){
+            if (user1.getId() == each.getId()) {count++;}
+            if (user2.getId() == each.getId()) {count++;}
+        }
+        assertEquals(2,count);
+    }
+
+    @Test
+    void getById() {
+        User user = new User("testLogin", "testPass", "testName", "testLastName", "testEmail", "123456789");
+        UserDAO.save(user);
+        users.add(user);
+        assertNotNull(user.getId());
+
+        User targetUser = UserDAO.getById(user.getId());
+        assertNotNull(targetUser);
+        assertNotNull(targetUser.getId());
+    }
+
+    @Test
+    void getByLoginAndPassword() {
     }
 }
