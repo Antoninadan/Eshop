@@ -96,9 +96,9 @@ class OrderDAOTest {
 
         int count = 0;
         for (Order each:targetOrders){
-            if (order1.getId() == each.getId()) {count++;}
-            if (order2.getId() == each.getId()) {count++;}
-            if (order3.getId() == each.getId()) {count++;}
+            if ((order1.getId()).equals(each.getId())) {count++;}
+            if ((order2.getId()).equals(each.getId())) {count++;}
+            if ((order3.getId()).equals(each.getId())) {count++;}
         }
         assertEquals(2,count);
 

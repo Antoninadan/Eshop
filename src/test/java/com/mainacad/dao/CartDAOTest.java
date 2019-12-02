@@ -82,13 +82,13 @@ class CartDAOTest {
         boolean isInCollectionCartNotOk2 = false;
 
         for (Cart each : targetCarts) {
-            if (cartOk.getId() == each.getId()) {
+            if ((cartOk.getId()).equals(each.getId())) {
                 isInCollectionCartOk = true;
             }
-            if (cartNotOk1.getId() == each.getId()) {
+            if ((cartNotOk1.getId()).equals(each.getId())) {
                 isInCollectionCartNotOk1 = true;
             }
-            if (cartNotOk2.getId() == each.getId()) {
+            if ((cartNotOk2.getId()).equals(each.getId())) {
                 isInCollectionCartNotOk2 = true;
             }
         }

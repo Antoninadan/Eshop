@@ -78,8 +78,8 @@ class UserDAOTest {
 
         int count = 0;
         for (User each:targetUsers){
-            if (user1.getId() == each.getId()) {count++;}
-            if (user2.getId() == each.getId()) {count++;}
+            if ((user1.getId()).equals(each.getId())) {count++;}
+            if ((user2.getId()).equals(each.getId())) {count++;}
         }
         assertEquals(2,count);
     }
