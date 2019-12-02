@@ -98,5 +98,14 @@ class UserDAOTest {
 
     @Test
     void getByLoginAndPassword() {
+        User user = new User("testLogin100", "testPass100", "testName", "testLastName", "testEmail", "123456789");
+        UserDAO.save(user);
+        users.add(user);
+        assertNotNull(user.getId());
+
+        User targetUser = UserDAO.getByLoginAndPassword(user.getLogin(), user.getPassword());
+        assertNotNull(targetUser);
+        assertNotNull(targetUser.getId());
+        assertEquals(targetUser.getLogin(),user.getLogin());
     }
 }
