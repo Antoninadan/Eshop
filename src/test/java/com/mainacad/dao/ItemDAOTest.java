@@ -1,25 +1,36 @@
 package com.mainacad.dao;
 
-import com.mainacad.model.Item;
+import com.mainacad.model.*;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 class ItemDAOTest {
+    private static final Long CURRENT_TIME = new Date().getTime();
     List<Item> items;
+    List<User> users;
+    List<Cart> carts;
+    List<Order> orders;
 
     @BeforeEach
     void setUp() {
+        carts = new ArrayList<>();
+        users = new ArrayList<>();
         items = new ArrayList<>();
+        orders = new ArrayList<>();
     }
 
     @AfterEach
     void tearDown() {
+        orders.forEach(it -> OrderDAO.delete(it.getId()));
+        carts.forEach(it -> CartDAO.delete(it.getId()));
+        users.forEach(it -> UserDAO.delete(it.getId()));
         items.forEach(it -> ItemDAO.delete(it.getId()));
     }
 
@@ -72,6 +83,93 @@ class ItemDAOTest {
         }
         assertTrue(isInCollectionItem3);
         assertTrue(!isInCollectionItem4);
+    }
+
+    @Test
+    void getAllNamesAndPricesPurchasedByUserInPeriod() {
+        Item item1 = new Item("name_1", "code_3", 30, 300);
+        Item item2 = new Item("name_2", "code_4", 40, 0);
+        Item item3 = new Item("name_2", "code_4", 40, 0);
+        items.add(item1);
+        items.add(item2);
+        items.add(item3);
+        ItemDAO.save(item1);
+        ItemDAO.save(item2);
+        ItemDAO.save(item3);
+        assertNotNull(item1.getId());
+        assertNotNull(item2.getId());
+        assertNotNull(item3.getId());
+
+        User userOk = new User("login_item1", "pass0", "first_name0", "last_name0", "email0", "phone0");
+        User userNotOk = new User("login_item2", "pass0", "first_name0", "last_name0", "email0", "phone0");
+        UserDAO.save(userOk);
+        UserDAO.save(userNotOk);
+        users.add(userOk);
+        users.add(userNotOk);
+        assertNotNull(userOk.getId());
+        assertNotNull(userNotOk.getId());
+
+        Long periodFrom = CURRENT_TIME - 100;
+        Long periodTo = CURRENT_TIME;
+        Long timeOk = CURRENT_TIME - 50;
+        Long timeNotOk = CURRENT_TIME - 200;
+
+        Cart cartOk = new Cart(Status.CLOSED, userOk, timeOk);
+        Cart cartNotOk1 = new Cart(Status.CLOSED, userNotOk, timeNotOk);
+        Cart cartNotOk2 = new Cart(Status.OPEN, userOk, timeNotOk);
+        Cart cartNotOk3 = new Cart(Status.CLOSED, userOk, timeNotOk);
+        CartDAO.save(cartOk);
+        CartDAO.save(cartNotOk1);
+        CartDAO.save(cartNotOk2);
+        CartDAO.save(cartNotOk3);
+        carts.add(cartOk);
+        carts.add(cartNotOk1);
+        carts.add(cartNotOk2);
+        carts.add(cartNotOk3);
+        assertNotNull(cartOk.getId());
+        assertNotNull(cartNotOk1.getId());
+        assertNotNull(cartNotOk2.getId());
+        assertNotNull(cartNotOk3.getId());
+
+        Order orderOk1 = new Order(item1, cartOk, 50);
+        Order orderOk2 = new Order(item2, cartOk, 50);
+        Order orderNotOk1 = new Order(item1, cartNotOk1, 50);
+        Order orderNotOk2 = new Order(item2, cartNotOk2, 50);
+        Order orderNotOk3 = new Order(item3, cartNotOk2, 50);
+        Order orderNotOk4 = new Order(item1, cartNotOk3, 50);
+        OrderDAO.save(orderOk1);
+        OrderDAO.save(orderOk2);
+        OrderDAO.save(orderNotOk1);
+        OrderDAO.save(orderNotOk2);
+        OrderDAO.save(orderNotOk3);
+        OrderDAO.save(orderNotOk4);
+        orders.add(orderOk1);
+        orders.add(orderOk2);
+        orders.add(orderNotOk1);
+        orders.add(orderNotOk2);
+        orders.add(orderNotOk3);
+        orders.add(orderNotOk4);
+        assertNotNull(orderOk1.getId());
+        assertNotNull(orderOk2.getId());
+        assertNotNull(orderNotOk1.getId());
+        assertNotNull(orderNotOk2.getId());
+        assertNotNull(orderNotOk3.getId());
+        assertNotNull(orderNotOk4.getId());
+
+        List<ItemDAO.ItemHeader> itemHeaders = ItemDAO.getAllNamesAndPricesPurchasedByUserInPeriod(userOk, periodFrom, periodTo);
+        assertTrue(itemHeaders.size() >= 2);
+
+        boolean isInCollectionItem1 = false;
+        boolean isInCollectionItem2 = false;
+        boolean isInCollectionItem3 = false;
+        for (ItemDAO.ItemHeader each:itemHeaders){
+            if (item1.getId() == each.getId()) {isInCollectionItem1 = true;}
+            if (item2.getId() == each.getId()) {isInCollectionItem2 = true;}
+            if (item3.getId() == each.getId()) {isInCollectionItem3 = true;}
+        }
+        assertTrue(isInCollectionItem1);
+        assertTrue(isInCollectionItem2);
+        assertTrue(!isInCollectionItem3);
     }
 
     @Test

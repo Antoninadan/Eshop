@@ -1,6 +1,11 @@
 package com.mainacad.dao;
 
 import com.mainacad.model.Item;
+import com.mainacad.model.User;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -81,6 +86,38 @@ public class ItemDAO {
         return items;
     }
 
+    // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    public static List<ItemHeader> getAllNamesAndPricesPurchasedByUserInPeriod(User user, Long timeFrom, Long timeTo) {
+        String sql = "SELECT i.id as item_id, i.name as item_name, i.price as item_price FROM carts c " +
+                "JOIN orders o ON o.cart_id = c.id " +
+                "JOIN items i ON i.id = o.item_id " +
+                "WHERE c.user_id = ? " +
+                "AND c.creation_time >=?  AND c.creation_time <=? " +
+                "AND c.status = 2";
+        List<ItemHeader> itemHeaders = new ArrayList<>();
+        try (Connection connection = ConnectionToDB.getConnection();
+             PreparedStatement preparedStatement =
+                     connection.prepareStatement(sql);
+        ) {
+            preparedStatement.setInt(1, user.getId());
+            preparedStatement.setLong(2, timeFrom);
+            preparedStatement.setLong(3, timeTo);
+
+            ResultSet resultSet = preparedStatement.executeQuery();
+            while (resultSet.next()) {
+                ItemHeader itemHeader = new ItemHeader(
+                        resultSet.getInt("item_id"),
+                        resultSet.getString("item_name"),
+                        resultSet.getInt("item_price")
+                );
+                itemHeaders.add(itemHeader);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return itemHeaders;
+    }
+
     public static Item getById(Integer id) {
         String sql = "SELECT * FROM items WHERE id = ?";
         try (Connection connection = ConnectionToDB.getConnection();
@@ -145,4 +182,15 @@ public class ItemDAO {
                 resultSet.getInt("price"),
                 resultSet.getInt("availability"));
     }
+
+    @Setter
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class ItemHeader {
+        Integer id;
+        String name;
+        Integer price;
+    }
 }
+
