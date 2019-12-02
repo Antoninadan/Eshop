@@ -86,9 +86,9 @@ public class ItemDAO {
         return items;
     }
 
-    // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    // !!!!!!!!!!!!List<ItemDTO> getAllByUserAndPeriod(User user, Long timeFrom, Long timeTo)   .... select rewrite  item, order cart
     public static List<ItemHeader> getAllNamesAndPricesPurchasedByUserInPeriod(User user, Long timeFrom, Long timeTo) {
-        String sql = "SELECT i.id as item_id, i.name as item_name, i.price as item_price FROM carts c " +
+        String sql = "SELECT i.id as itemId, i.name as item_name, i.price as item_price FROM carts c " +
                 "JOIN orders o ON o.cart_id = c.id " +
                 "JOIN items i ON i.id = o.item_id " +
                 "WHERE c.user_id = ? " +
@@ -106,7 +106,7 @@ public class ItemDAO {
             ResultSet resultSet = preparedStatement.executeQuery();
             while (resultSet.next()) {
                 ItemHeader itemHeader = new ItemHeader(
-                        resultSet.getInt("item_id"),
+                        resultSet.getInt("itemId"),
                         resultSet.getString("item_name"),
                         resultSet.getInt("item_price")
                 );
@@ -193,4 +193,22 @@ public class ItemDAO {
         Integer price;
     }
 }
+/*
+select u.first_name, c.user_id, SUM(i.price * o.amount), c.creation_time
+from items i
+join orders o on o.item_id = i.id
+JOIN carts c ON c.id = o.cart_id
+JOIN users u ON c.user_id = u.id
+GROUP BY u.first_name, c.user_id, c.creation_time
+ORDER BY c.creation_time
 
+
+select u.first_name, c.user_id, SUM(i.price * o.amount), c.creation_time
+from items i
+JOIN (SELECT * FROM orders WHERE amount >200) AS o ON o.item_id = i.id
+JOIN carts c ON c.id = o.cart_id
+JOIN users u ON c.user_id = u.id
+GROUP BY u.first_name, c.user_id, c.creation_time
+ORDER BY c.creation_time
+
+*/

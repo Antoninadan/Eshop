@@ -28,10 +28,10 @@ class ItemDAOTest {
 
     @AfterEach
     void tearDown() {
-        orders.forEach(it -> OrderDAO.delete(it.getId()));
-        carts.forEach(it -> CartDAO.delete(it.getId()));
-        users.forEach(it -> UserDAO.delete(it.getId()));
-        items.forEach(it -> ItemDAO.delete(it.getId()));
+//        orders.forEach(it -> OrderDAO.delete(it.getId()));
+//        carts.forEach(it -> CartDAO.delete(it.getId()));
+//        users.forEach(it -> UserDAO.delete(it.getId()));
+//        items.forEach(it -> ItemDAO.delete(it.getId()));
     }
 
     @Test
