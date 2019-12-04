@@ -1,5 +1,6 @@
 package com.mainacad.dao;
 
+import com.mainacad.dao.model.ItemDTO;
 import com.mainacad.model.*;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -28,10 +29,10 @@ class ItemDAOTest {
 
     @AfterEach
     void tearDown() {
-//        orders.forEach(it -> OrderDAO.delete(it.getId()));
-//        carts.forEach(it -> CartDAO.delete(it.getId()));
-//        users.forEach(it -> UserDAO.delete(it.getId()));
-//        items.forEach(it -> ItemDAO.delete(it.getId()));
+        orders.forEach(it -> OrderDAO.delete(it.getId()));
+        carts.forEach(it -> CartDAO.delete(it.getId()));
+        users.forEach(it -> UserDAO.delete(it.getId()));
+        items.forEach(it -> ItemDAO.delete(it.getId()));
     }
 
     @Test
@@ -86,7 +87,7 @@ class ItemDAOTest {
     }
 
     @Test
-    void getAllNamesAndPricesPurchasedByUserInPeriodTest() {
+    void getAllByUserAndPeriodTest() {
         Item item1 = new Item("name_1", "code_3", 30, 300);
         Item item2 = new Item("name_2", "code_4", 40, 0);
         Item item3 = new Item("name_2", "code_4", 40, 0);
@@ -156,13 +157,13 @@ class ItemDAOTest {
         assertNotNull(orderNotOk3.getId());
         assertNotNull(orderNotOk4.getId());
 
-        List<ItemDAO.ItemHeader> itemHeaders = ItemDAO.getAllNamesAndPricesPurchasedByUserInPeriod(userOk, periodFrom, periodTo);
-        assertTrue(itemHeaders.size() >= 2);
+        List<ItemDTO> itemDTOS = ItemDAO.getAllByUserAndPeriod(userOk, periodFrom, periodTo);
+        assertTrue(itemDTOS.size() >= 2);
 
         boolean isInCollectionItem1 = false;
         boolean isInCollectionItem2 = false;
         boolean isInCollectionItem3 = false;
-        for (ItemDAO.ItemHeader each:itemHeaders){
+        for (ItemDTO each:itemDTOS){
             if ((item1.getId()).equals(each.getId())) {isInCollectionItem1 = true;}
             if ((item2.getId()).equals(each.getId())) {isInCollectionItem2 = true;}
             if ((item3.getId()).equals(each.getId())) {isInCollectionItem3 = true;}

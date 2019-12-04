@@ -1,5 +1,6 @@
 package com.mainacad.dao;
 
+import com.mainacad.dao.model.ItemDTO;
 import com.mainacad.model.Item;
 import com.mainacad.model.User;
 import lombok.AllArgsConstructor;
@@ -86,15 +87,14 @@ public class ItemDAO {
         return items;
     }
 
-    // !!!!!!!!!!!!List<ItemDTO> getAllByUserAndPeriod(User user, Long timeFrom, Long timeTo)   .... select rewrite  item, order cart
-    public static List<ItemHeader> getAllNamesAndPricesPurchasedByUserInPeriod(User user, Long timeFrom, Long timeTo) {
-        String sql = "SELECT i.id as itemId, i.name as item_name, i.price as item_price FROM carts c " +
-                "JOIN orders o ON o.cart_id = c.id " +
-                "JOIN items i ON i.id = o.item_id " +
+    public static List<ItemDTO> getAllByUserAndPeriod(User user, Long timeFrom, Long timeTo) {
+        String sql = "SELECT i.id as itemid, i.name as item_name, i.price as item_price FROM items i " +
+                "JOIN orders o ON o.item_id = i.id " +
+                "JOIN carts c ON c.id = o.cart_id " +
                 "WHERE c.user_id = ? " +
                 "AND c.creation_time >=?  AND c.creation_time <=? " +
                 "AND c.status = 2";
-        List<ItemHeader> itemHeaders = new ArrayList<>();
+        List<ItemDTO> itemDTOS = new ArrayList<>();
         try (Connection connection = ConnectionToDB.getConnection();
              PreparedStatement preparedStatement =
                      connection.prepareStatement(sql);
@@ -105,17 +105,17 @@ public class ItemDAO {
 
             ResultSet resultSet = preparedStatement.executeQuery();
             while (resultSet.next()) {
-                ItemHeader itemHeader = new ItemHeader(
-                        resultSet.getInt("itemId"),
+                ItemDTO itemDTO = new ItemDTO(
+                        resultSet.getInt("itemid"),
                         resultSet.getString("item_name"),
                         resultSet.getInt("item_price")
                 );
-                itemHeaders.add(itemHeader);
+                itemDTOS.add(itemDTO);
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return itemHeaders;
+        return itemDTOS;
     }
 
     public static Item getById(Integer id) {
@@ -183,15 +183,6 @@ public class ItemDAO {
                 resultSet.getInt("availability"));
     }
 
-    @Setter
-    @Getter
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class ItemHeader {
-        Integer id;
-        String name;
-        Integer price;
-    }
 }
 /*
 select u.first_name, c.user_id, SUM(i.price * o.amount), c.creation_time
